@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" backgroundAlpha="0.0">
+    <mx:Script><![CDATA[
+import flash.display.Graphics;
+import flash.events.MouseEvent;
+import flash.geom.Point;
+import edu.umd.mith.axe.Rect;
+
+public const MODE_RECT:String = 'r';
+public const MODE_ELLIPSE:String = 'e';
+public const MODE_POLY:String = 'p';
+
+private var _mode:String = 'r';
+private var start:Point = null;
+private var points:Array = null;
+private var allShapes:Array = [];
+
+public function get mode():String {
+	return _mode;
+}
+
+public function set mode(m:String):void {
+	if (!(/^[rep]$/).test(m)) throw "Invalid mode";
+	_mode = m;
+}
+
+// clears and sets style
+private function prepCanvas(g:Graphics):void {
+	g.clear();
+	g.lineStyle(2, 0);
+}
+
+private function doInitBack():void {
+	prepCanvas(backCanvas.graphics);
+}
+
+private function doInitFore():void {
+	prepCanvas(foreCanvas.graphics);
+}
+
+private function lastElem(v:Array):Point {
+	return v.length ? v[v.length-1] : null;
+}
+
+	]]></mx:Script>
+	<mx:Canvas id="backCanvas" width="{width}" height="{height}" x="0" y="0"
+			   backgroundAlpha="0.0" initialize="doInitBack();" />
+	<mx:Canvas id="foreCanvas" width="{width}" height="{height}" x="0" y="0"
+	           initialize="doInitFore();" 
+	           backgroundAlpha="0.0" />
+</mx:Canvas>
