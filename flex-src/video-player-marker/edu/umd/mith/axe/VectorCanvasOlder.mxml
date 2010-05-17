@@ -41,7 +41,7 @@ private function doInitFore():void {
 private function lastElem(v:Array):Point {
 	return v.length ? v[v.length-1] : null;
 }
-
+/*
 private function downHandler(e:MouseEvent):void {
 	var g:Graphics = foreCanvas.graphics;
 	var cur:Point = new Point(e.localX, e.localY);
@@ -100,6 +100,7 @@ private function moveHandler(e:MouseEvent):void {
 		throw "Should not be reached";
 	}
 }
+*/
 	]]></mx:Script>
 	<mx:Canvas id="backCanvas" width="{width}" height="{height}" x="0" y="0"
 			   backgroundAlpha="0.0" initialize="doInitBack();" />

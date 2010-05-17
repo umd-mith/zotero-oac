@@ -68,9 +68,9 @@ rootNS.TimeMarker = function (opts) {
 	var missingOpts = _.reject(reqOpts, function (p) {return opts.hasOwnProperty(p);});
 	if (missingOpts.length)
 		throw "Missing required option(s) " + missingOpts.join(", ");
-
+	
 	var defaultOpts = {
-		initState: [{moments: [], ranges: []}],
+		initState: [{moments: [], ranges: [], shapes: []}],
 		formatTime: function (t) {return ""+t;}
 	};
 	_.each(defaultOpts, function (v, p) {
@@ -168,6 +168,9 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 			}),
 			ranges: _.map(self._ranges, function (r) {
 				return {startT: r.startT, endT: r.endT};
+			}),
+			shapes: _.map(self._shapes, function(sh){
+				return {};
 			})
 		}];
 	},
@@ -185,6 +188,7 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 			new self._TimeStamp(self._player.getPosition(),uid),
 			function (ts){return ts.sortVal();});*/
 		self._moments.push(new self._TimeStamp(self._player.getPosition(),uid));
+		
 		self.displayMoments();
 	},
 	markStartEnd: function() {
@@ -207,7 +211,7 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 	displayMoments: function() {
 		var output = "";
 		for (var i=0;i<this._moments.length;i++){
-			output += "<tr class='time-marker-moment'><td>"+this._moments[i]+"</td><td><span onclick='changeNote(this,false,"+this._moments[i].id+")'>"+this._moments[i].note+"</span></td><td><a onclick='changeNote(this.parentNode.previousSibling.firstChild,false,"+this._moments[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotate-audio-edit.png' alt='edit' /></a></td><td><a onclick='deleteNote(this,false,"+this._moments[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
+			output += "<tr class='time-marker-moment'><td>"+this._moments[i]+"</td><td><span onclick='changeNote(this,false,"+this._moments[i].id+")'>"+this._moments[i].note+"</span></td><td><a onclick='changeNote(this.parentNode.previousSibling.firstChild,false,"+this._moments[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><a onclick='deleteNote(this,false,"+this._moments[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
 		}
 
 		this._momentList.html(output);
@@ -215,7 +219,7 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 	displayRanges: function() {
 		var output="";
 				for (var i=0;i<this._ranges.length;i++){
-			output += "<tr class='time-marker-range'><td>"+this._ranges[i]+"</td><td><span onclick='changeNote(this,true,"+this._ranges[i].id+")'>"+this._ranges[i].note+"</span></td><td><a onclick='changeNote(this.parentNode.previousSibling.firstChild,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotate-audio-edit.png' alt='edit' /></a></td><td><a onclick='deleteNote(this,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
+			output += "<tr class='time-marker-range'><td>"+this._ranges[i]+"</td><td><span onclick='changeNote(this,true,"+this._ranges[i].id+")'>"+this._ranges[i].note+"</span></td><td><a onclick='changeNote(this.parentNode.previousSibling.firstChild,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><a onclick='deleteNote(this,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
 		}
 		this._rangeList.html(output);
 	}

@@ -235,6 +235,7 @@
 
 	// TODO: object-ify our shapes
 	function isNear(p, o) {
+		
 		if (o.con == "rect") {
 			var farX = o.x+o.width, farY = o.y+o.height;
 			var ul = {x: o.x, y: o.y}, ur = {x: farX, y:o.y},
@@ -285,10 +286,10 @@
 		// only thing that methods access at the moment
 		self._drawMode = initDrawMode || 's';
 		self._scale = initScale || 1;
-		self._allObjs = initObjs || [];
+		self._allObjs = ((initObjs.shapes || initObjs)||[]);
 		self._start = self._obj = self._points = null;
 		self._auxClass = auxClass;
-
+		self._tarObj = null;
 		// XXX: should handle wandering out of the area...
 		overElm = $(overElm || "img");
 		self._over = {
@@ -355,7 +356,12 @@
 				var r = {};
 				_.each(["scale", "con", "args", "x", "y", "width", "height",
 					"points", "cx", "cy", "rx", "ry", "auxData"],
-					function (p) {if (p in o) r[p] = o[p];});
+					function (p) {if (p in o) {
+						
+						r[p] = o[p];
+						debug("saving: "+p+" "+r[p]);
+					}
+					});
 				return r;
 			});
 		},
@@ -370,10 +376,12 @@
 			self._over.offset = self._over.elm.offset();
 			self._installHandlers();
 			_.each(self._allObjs, function (o) {
+                if (self._paper[o.con]){
 				o.cur = self._paper[o.con].apply(self._paper, o.args);
 				var rs = relScale(self, o);
 				o.cur.scale(rs, rs, 0, 0);
 				o.cur.attr(INIT_ATTRS);
+                }
 			});
 		},
 		// given an event e, figure out where it is relative to the canvas
@@ -385,9 +393,12 @@
 			};
 		},
 		_installHandlers: function() {
+			
 			var self = this;
 
-			self._cont.mousedown(function(e) {
+			self._cont.mouseover(function(e){
+				
+				}).mousedown(function(e) {
 				if (1 != e.which) return;
 				e.preventDefault();
 
@@ -451,26 +462,140 @@
 					}
 					self._points.push({x: cur.x, y: cur.y});
 				} else if (self._drawMode == 's') {
-					if (self._obj) {
-						self._obj.cur.attr(INIT_ATTRS);
-						if (self._auxClass && self._obj.curAux) {
-							self._obj.auxData = self._obj.curAux.close();
-							delete self._obj.curAux;
+					if (!(e.target.id == "selBB")) {
+						if (self._obj) {
+							self._obj.cur.attr(INIT_ATTRS);
+							if (self._auxClass && self._obj.curAux) {
+								self._obj.auxData = self._obj.curAux.close();
+								
+								delete self._obj.curAux;
+							}
 						}
-					}
-					self._obj = null;
-					var targetObj = _.first(_.select(self._allObjs,
-						function(o){
+						self._obj = null;
+						
+						targetObj = _.first(_.select(self._allObjs, function(o){
+						
+						
 							return isNear(cur, o);
 						}));
-					if (!targetObj) return;
-					targetObj.cur.attr(SELECTED_ATTRS);
-					if (self._auxClass && !targetObj.curAux) {
-						targetObj.curAux = new self._auxClass(targetObj.auxData, {x: e.clientX, y: e.clientY});
+						if (!targetObj) {
+							//$("#selBB").remove();
+							return;
+						}
+						
+						targetObj.cur.attr(SELECTED_ATTRS);
+						if (self._auxClass && !targetObj.curAux) {
+							targetObj.curAux = new self._auxClass(targetObj.auxData, {
+								x: e.clientX,
+								y: e.clientY
+							});
+						}
+						
+						self._obj = targetObj;
+						self._start = cur;
+						
+						// Create bounding box
+						
+						var bb = targetObj.cur.getBBox();
+						zH = $(".zotero").height();
+						debug("zotH  " + zH);
+						var bbH = parseInt(bb.height);
+						var bbW = parseInt(bb.width);
+						var bbL = bb.x;
+						var bbT = parseInt(bb.y) + parseInt(zH);
+						
+						vd = $(".vd-container")[0];
+						
+						if (!($("#selBB").offset())) {
+							$(vd).append("<div id='selBB'></div>");
+						}
+						$("#selBB").css({
+							"height": bbH,
+							"width": bbW,
+							"border": "thick cyan solid"
+						
+						});
+						$("#selBB").offset({
+							left: bbL,
+							top: bbT
+						});
+						debug("BEFORE RESIZE: "+targetObj);
+						if (self._obj){
+							self._tarObj = self._obj;
+						}
+						$("#selBB").draggable({
+							
+							stop: function(e, ui){
+								tobj = self._tarObj;
+								debug("XXXXXXXXXXXXXX");
+								for (n in tobj){
+									debug(n+":"+tobj[n]);
+								}
+								debug("tobj: "+tobj)
+								if (tobj.con == "rect") {
+									tobj.cur.attr({
+										x: ui.offset.left,
+										y: ui.offset.top - zH
+									});
+									tobj.x = ui.offset.left;
+									tobj.y = ui.offset.top - zH;
+									tobj.args = [ui.offset.left, ui.offset.top - zH, $("#selBB").width(), $("#selBB").height()];
+								}
+								else 
+									if (tobj.con == "ellipse") {
+									
+									
+										newCX = ui.offset.left + ($("#selBB").width() / 2);
+										newCY = ui.offset.top + ($("#selBB").height() / 2) - zH;
+										tobj.cur.attr({
+											cx: newCX,
+											cy: newCY
+										});
+										tobj.cx = newCX;
+										tobj.cy = newCY;
+										tobj.args = [newCX, newCY, $("#selBB").width() / 2, $("#selBB").height() / 2];
+									}
+								
+								
+							}
+						});
+						
+					
+						$("#selBB").resizable({
+							
+							stop: function(e, ui){
+								tobj = self._tarObj;
+								if (tobj.con == "rect") {
+									
+									debug(ui.size.width + "_width");
+									tobj.cur.attr({
+										width: ui.size.width,
+										height: ui.size.height
+									});
+									tobj.width = ui.size.width;
+									tobj.height = ui.size.height;
+									tobj.con = "rect";
+									tobj.args = [tobj.x, tobj.y, ui.size.width, ui.size.height];
+								}
+								else 
+									if (tobj.con == "ellipse") {
+									    
+										tobj.cur.attr({
+											ry: ui.size.height / 2,
+											rx: ui.size.width / 2
+										});
+										tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2,];
+									}
+								
+							}
+						});
+						
+						self._obj = targetObj;
+						self._start = cur;
 					}
-					self._obj = targetObj;
-					self._start = cur;
+					
 				} else {
+					_installHandlers
 					throw "should not be reached";
 				}
 			}).mouseup(function (e) {
@@ -483,8 +608,10 @@
 						cur: self._obj,
 						scale: self._scale
 					};
+					
 					if (self._drawMode == 'r') {
 						var as = self._obj.attr(["x", "y", "width", "height"]);
+						
 						$.extend(metaObj, {
 							con: "rect",
 							args: [as.x, as.y, as.width, as.height],
@@ -493,6 +620,7 @@
 							width: as.width,
 							height: as.height
 						});
+						
 					} else if (self._drawMode == 'e') {
 						var as = self._obj.attr(["cx", "cy", "rx", "ry"]);
 						$.extend(metaObj, {
@@ -504,7 +632,8 @@
 							ry: as.ry
 						});
 					} else {
-						throw "should not be reached";
+						
+						throw "should not be reached ";
 					}
 					var bbox = metaObj.cur.getBBox();
 					if (bbox.width > TOO_SMALL && bbox.height > TOO_SMALL) self._allObjs.push(metaObj);
@@ -514,15 +643,22 @@
 				} else if (self._drawMode == 's') {
 					self._start = null; // stop moving
 					var o = self._obj;
-					if (o && o.newO) {
+					if (o && targetObj) {
 						_.each(["scale", "con", "args", "x", "y", "width", "height",
 							"points", "cx", "cy", "rx", "ry"],
-							function (p) {if (p in o) o[p] = o.newO[p];});
+							function(p){
+								
+								if (p in o) {
+									debug("mouseup "+p+":"+targetObj[p]);
+									o[p] = targetObj[p];
+								}
+							});
 					}
 				} else {
 					throw "should not be reached";
 				}
 			}).mousemove(function (e) {
+				
 				if (!self._obj) return;
 				e.preventDefault();
 
@@ -559,25 +695,35 @@
 					lp.y = cur.y;
 					self._obj.attr({"path": makePathStr(self._points)});
 				} else if (self._drawMode == 's') {
+					/*
 					if (!self._start || !self._obj) return;
 
 					var st = self._start;
 					var o = self._obj;
 					var rs = relScale(self, o);
-					var shift = {x: (cur.x-st.x)/rs, y: (cur.y-st.y)/rs};
-					o.newO = shiftShape(o, shift);
+					//var shift = {x: (cur.x-st.x)/rs, y: (cur.y-st.y)/rs};
+					//o.newO = shiftShape(o, shift);
 					if (o.con == "rect") {
-						o.cur.attr({x: o.newO.x*rs, y: o.newO.y*rs*rs});
+					//	o.cur.attr({x: o.newO.x*rs, y: o.newO.y*rs*rs});
+				
+						
+						
+						
 					} else if (self._obj.con == "ellipse") {
-						o.cur.attr({cx: o.newO.cx*rs, cy: o.newO.cy*rs});
+						//o.cur.attr({cx: o.newO.cx*rs, cy: o.newO.cy*rs});
 					} else if (self._obj.con == "path") {
 						o.cur.attr({path: makePathStr(_.each(o.newO.points, function(p){
 							return {x: p.x*rs, y: p.y*rs};
 						})) + " z"});
 					} else {
+					
 						throw "should not be reached";
 					}
+					*/
+					
 				} else {
+					alert("double ouch");
+			
 					throw "should not be reached";
 				}
 			});
@@ -618,3 +764,14 @@ p1.attr({"stroke": "black", "stroke-width": 1.5});
 var p2 = paper.path("M10 10L90 90L10 90z");
 p2.attr({"stroke": "white", "stroke-width": 0.5});
 */
+//-------DEBUGGER-----------------
+my_window = window.open("", "mywindow1", "scrollbars=yes,status=1,width=350,height=150");
+my_window.document.write("<HTML><body><div>Begin</div></body></HTML>");
+
+function debug(txt){
+    var dbugLine = document.createElement("div");
+    dbugLine.appendChild(document.createTextNode(txt));
+    my_window.document.getElementsByTagName("body")[0].appendChild(dbugLine);
+}
+
+debug("starting");
