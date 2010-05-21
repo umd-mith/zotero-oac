@@ -19,13 +19,13 @@
 		self._container.html(
 			"<div class='player-ui-play'>Play</div>" +
 			"<div class='player-ui-pause'>Pause</div>" +
-			"<div>Loaded <span class='player-ui-loaded'></span> out of " +
+			"<div class='loaded'>Loaded: <span class='player-ui-loaded'></span> out of " +
 				"<span class='player-ui-size'></span>" +
 				"(<span class='player-ui-loaded-perc'></span>%)</div>" +
-			"<div>Volume: <span class='player-ui-volume'></span>%</div>" +
+			"<div class='volume'>Volume: <span class='player-ui-volume'></span>%</div>" +
 				"<div id='player-ui-new-volume'></div>"+
-				"<div>Playing: <div id='player-ui-seek'></div>" +
-			"<div><span class='player-ui-pos'></span> out of " +
+				"<div class='playing'>Playing: <div id='player-ui-seek'></div>" +
+			"<div class='timing'><span class='player-ui-pos'></span> out of " +
 				"<span class='player-ui-length'></span></div>"+
 				"<script type='text/JavaScript' language='JavaScript'>"+
 				"volumeSlide=$('#player-ui-new-volume').slider({"+

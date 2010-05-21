@@ -293,14 +293,15 @@ Zotero.Annotaters = {};
 						"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/libs/ui.core.css' />"+
 				"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/libs/ui.resizable.css' />"+
 		"<link type='text/css' href='chrome://zotero-content/skin/libs/ui.all-slider.css' rel='stylesheet' /> "+
-		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />"+
-"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/ImageVectorMarker.css' />"+
-  "</head><body>\n" +
+		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />"+ 
+		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/ImageVectorMarker.css' />"+ 
+		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/VideoMarker.css' />"+
+		 "</head><body>\n" +
   "<div class='zotero'><img src='chrome://zotero-content/skin/annotations/images/zotero_logo.png' class='logo'/></div>"+
 			"<embed src=\"" + escapeHTML(flashURI.spec) + "\"\n" +
 				"FlashVars=\"" + escapeHTML("eid=1&videoURL=" + fileURI) + "\" \n" +
 				"allowscriptaccess=\"always\" wmode=\"opaque\"\n"  +
-				"id=\"player\" style=\"height: 300; width: 400;\"></embed>\n" +
+				"id=\"player\" style=\"height: 300; width: 400;\ background=#C1C1C1;\"></embed>\n" +
 			"<div id=\"player-ui-container\"></div>\n" +
 			"<div id=\"time-marker-container\"></div>\n" +
 			buildScriptDeps({

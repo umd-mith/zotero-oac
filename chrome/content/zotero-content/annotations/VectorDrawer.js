@@ -512,7 +512,7 @@
 						$("#selBB").css({
 							"height": bbH,
 							"width": bbW,
-							"border": "thick cyan solid"
+							"border": "3px #ff6666 solid"
 						
 						});
 						$("#selBB").offset({
@@ -524,14 +524,16 @@
 							self._tarObj = self._obj;
 						}
 						$("#selBB").draggable({
-							
+							start: function(e,ui){
+								self._start = {
+									x: e.clientX,
+									y: e.clientY
+								};
+							},
 							stop: function(e, ui){
 								tobj = self._tarObj;
-								debug("XXXXXXXXXXXXXX");
-								for (n in tobj){
-									debug(n+":"+tobj[n]);
-								}
-								debug("tobj: "+tobj)
+								
+								
 								if (tobj.con == "rect") {
 									tobj.cur.attr({
 										x: ui.offset.left,
@@ -555,18 +557,39 @@
 										tobj.cy = newCY;
 										tobj.args = [newCX, newCY, $("#selBB").width() / 2, $("#selBB").height() / 2];
 									}
-								
-								
+									else 
+										if (tobj.con == "path") {
+											diffX = self._start.x-e.clientX;
+											diffY = self._start.y-e.clientY;
+											shifted = _.each(tobj.points, function(p){
+												p.x = parseInt(p.x)-diffX;											
+												p.y = parseInt(p.y)-diffY;
+												nx = p.x;
+												ny = p.y;
+												return {x:nx,y:ny};
+											});
+
+											tobj.cur.attr({
+												path: makePathStr(tobj.points)+"z"
+											});
+											tobj.args=[makePathStr(tobj.points)+"z"];
+
+										}
 							}
 						});
 						
 					
 						$("#selBB").resizable({
-							
+							start: function(e,ui){
+								self._start = {
+									width: ui.size.width,
+									height: ui.size.height
+								};
+							},
 							stop: function(e, ui){
 								tobj = self._tarObj;
 								if (tobj.con == "rect") {
-									
+								
 									debug(ui.size.width + "_width");
 									tobj.cur.attr({
 										width: ui.size.width,
@@ -579,19 +602,39 @@
 								}
 								else 
 									if (tobj.con == "ellipse") {
-									    
+									
 										tobj.cur.attr({
 											ry: ui.size.height / 2,
 											rx: ui.size.width / 2
 										});
-										tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2,];
+										tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2, ];
 									}
+									else 
+										if (tobj.con == "path") {
+										
+										   scaleX = parseFloat(ui.size.width)/parseFloat(self._start.width);
+											scaleY = parseFloat(ui.size.height)/parseFloat(self._start.height);
+											shifted = _.each(tobj.points, function(p){
+												p.x = parseFloat(p.x)*scaleX;											
+												p.y = parseFloat(p.y)*scaleY;
+												nx = p.x;
+												ny = p.y;
+												return {x:nx,y:ny};
+											});
+
+											tobj.cur.attr({
+												path: makePathStr(tobj.points)+"z"
+											});
+											tobj.args=[makePathStr(tobj.points)+"z"];
+											
+										}
+										
 								
 							}
 						});
 						
 						self._obj = targetObj;
-						self._start = cur;
+						//self._start = cur;
 					}
 					
 				} else {
@@ -637,11 +680,11 @@
 					}
 					var bbox = metaObj.cur.getBBox();
 					if (bbox.width > TOO_SMALL && bbox.height > TOO_SMALL) self._allObjs.push(metaObj);
-					self._start = self._obj = null;
+					//self._start = self._obj = null;
 				} else if (self._drawMode == 'p') {
 					// do nothing
 				} else if (self._drawMode == 's') {
-					self._start = null; // stop moving
+					//self._start = null; // stop moving
 					var o = self._obj;
 					if (o && targetObj) {
 						_.each(["scale", "con", "args", "x", "y", "width", "height",
@@ -722,7 +765,7 @@
 					*/
 					
 				} else {
-					alert("double ouch");
+				
 			
 					throw "should not be reached";
 				}
