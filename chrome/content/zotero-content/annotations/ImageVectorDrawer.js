@@ -16,7 +16,9 @@ function Note(old, pos) {
 	var cancel = $(".cancel", this._cont);
 
 	this._cont.appendTo(".vd-container");
-	this._cont.css({left: pos.x, top: pos.y, position: "absolute"});
+	var nPosY = pos.y+$(document).scrollTop();
+	var nPosX = pos.x+$(document).scrollLeft();
+	this._cont.css({left: nPosX, top: nPosY, position: "absolute"});
 	this._disp.text(old || " ");
 	this._area.val(old);
 

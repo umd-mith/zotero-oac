@@ -294,7 +294,7 @@ Zotero.Annotaters = {};
 				"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/libs/ui.resizable.css' />"+
 		"<link type='text/css' href='chrome://zotero-content/skin/libs/ui.all-slider.css' rel='stylesheet' /> "+
 		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />"+ 
-		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/ImageVectorMarker.css' />"+ 
+		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/ImageVectorDrawer.css' />"+ 
 		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/VideoMarker.css' />"+
 		 "</head><body>\n" +
   "<div class='zotero'><img src='chrome://zotero-content/skin/annotations/images/zotero_logo.png' class='logo'/></div>"+

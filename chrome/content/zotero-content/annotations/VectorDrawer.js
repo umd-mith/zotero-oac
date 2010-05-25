@@ -257,7 +257,73 @@
 			throw "should not be reached";
 		}
 	}
-
+	var Node = function( pos, shape, loc, offsets){
+	
+		
+		var self =this;
+		self._loc = loc;
+		self._shape = shape;
+		self._pos = pos;
+		self._yOff = offsets.offsetTop;
+		self._xOff = offsets.offsetLeft;
+		self._html = "<div class='axe_node'> </div>";
+		$(self._html).appendTo((self._loc)).mouseenter(function(){
+									
+									$(this).css({'width':'10px', 'height':'10px','background-image':'url("chrome://zotero-content/skin/annotations/images/axe_blue_large.png")'}).addClass("node_selected");
+								    $(this).bind("killNode",function(e){
+										var ssp = self._shape.points;
+										for (n=0;n<ssp.length;n++) {
+											
+											if (((ssp[n].x == self._pos.x) && (ssp[n].y == self._pos.y)) && (confirm("Delete this point?"))){
+												
+												ssp.splice(n,1);
+												self._shape.cur.attr({
+												path: makePathStr(ssp)+"z"
+												});
+												self._shape.args=[makePathStr(ssp)+"z"];
+												self._shape.points=ssp;
+												
+												break;
+												
+											}
+										}
+										$(this).remove();
+									});
+								}).mouseleave(function(){
+									
+									$(this).css({'width':'7px', 'height':'7px','background-image':'url("chrome://zotero-content/skin/annotations/images/axe_blue_small.png")'}).removeClass("node_selected");
+								}).offset({
+									left: self._pos.x+self._xOff,
+									top: self._pos.y+self._yOff
+								}).draggable({
+									
+									stop: function(e,ui){
+										
+										var ssp = self._shape.points;
+										debug("Before STRING OF POINTS: "+makePathStr(ssp)+"z");
+										debug("node pos "+ui.offset.left+" "+ui.offset.top);
+										for (n=0;n<ssp.length;n++) {
+											if ((ssp[n].x == self._pos.x) && (ssp[n].y == self._pos.y)){
+												
+												self._pos.x = ssp[n].x = parseFloat(ui.offset.left)-self._xOff;
+												self._pos.y = ssp[n].y = parseFloat(ui.offset.top)-self._yOff;
+												
+												self._shape.cur.attr({
+												path: makePathStr(ssp)+"z"
+												});
+												self._shape.args=[makePathStr(ssp)+"z"];
+												self._shape.points=ssp;
+												
+												break;
+												
+											}
+										}
+										debug("After STRING OF POINTS: "+makePathStr(ssp)+"z");
+									}
+								});
+	}
+	Node.prototype = {};
+	Node.constructor = Node;
 	// TODO: make this take an object for options instead of a pile of
 	// order-dependant args
 
@@ -283,6 +349,11 @@
 	 */
 	var VectorDrawer = function (initDrawMode, initScale, initObjs, overElm, auxClass) {
 		var self = this;
+		// Offset height of header
+		
+	
+		self._offTop = $(overElm).offset().top;
+		self._offLeft = $(overElm).offset().left;
 		// only thing that methods access at the moment
 		self._drawMode = initDrawMode || 's';
 		self._scale = initScale || 1;
@@ -317,6 +388,7 @@
 			}
 			return this._drawMode;
 		},
+		
 		/**
 		 * Method: scale
 		 * Sets or gets the current scale. If no argument is given,
@@ -342,7 +414,8 @@
 				o.cur = null;
 			});
 			self._canvas.elm.remove();
-			this._buildCanvas();
+		
+			self._buildCanvas();
 			return self._scale;
 		},
 		/**
@@ -387,21 +460,25 @@
 		// given an event e, figure out where it is relative to the canvas
 		_getCanvasXY: function (e) {
 			var self = this;
+			
 			return {
-				x: e.clientX-self._canvas.off.left,
-				y: e.clientY-self._canvas.off.top
+				x: (e.clientX-self._canvas.off.left)+parseFloat($(document).scrollLeft()),
+				y: (e.clientY-self._canvas.off.top)+parseFloat($(document).scrollTop())
 			};
 		},
 		_installHandlers: function() {
 			
 			var self = this;
-
+			
+			self._cont.unbind();
 			self._cont.mouseover(function(e){
+				//Mouse over
 				
-				}).mousedown(function(e) {
-				if (1 != e.which) return;
+			}).mousedown(function(e) {
+				
+				if ((1 != e.which) || ($(e.target).hasClass("axe_node"))) return;
 				e.preventDefault();
-
+				debug(self._cont);
 				var cur = self._getCanvasXY(e);
 				if (self._drawMode == 'r') {
 					self._start = cur;
@@ -432,8 +509,10 @@
 									inter = true;
 									_.breakLoop();
 								}
+								
 								lp = cp;
 							});
+						
 							// intersection detected, don't use this
 							if (inter) return;
 						}
@@ -453,15 +532,32 @@
 								});
 							}
 							self._obj = self._points = null;
+							$(".axe_node").remove();
+								$(".axe_start_node").remove();
 							return; // done!
 						}
+							node = new Node({
+									x: cur.x,
+									y: cur.y
+								},self._obj,self._cont,{offsetTop: self._offTop, offsetLeft: self._offLeft});
+							
 					} else {
 						self._points = [cur];
 						self._obj = self._paper.path(makePathStr(self._points));
 						self._obj.attr(INIT_ATTRS);
+						var node = $("<div class='axe_start_node'> </div>").appendTo((self._cont)).offset({
+									left: cur.x+self._offLeft,
+									top: cur.y+self._offTop
+								}).mouseenter(function(){
+									$(this).css({'width':'10px', 'height':'10px','background-image':'url("chrome://zotero-content/skin/annotations/images/axe_red_large.png")'});
+								}).mouseleave(function(){
+									$(this).css({'width':'7px', 'height':'7px','background-image':'url("chrome://zotero-content/skin/annotations/images/axe_red_small.png")'});
+								});
 					}
 					self._points.push({x: cur.x, y: cur.y});
 				} else if (self._drawMode == 's') {
+					
+				
 					if (!(e.target.id == "selBB")) {
 						if (self._obj) {
 							self._obj.cur.attr(INIT_ATTRS);
@@ -471,7 +567,7 @@
 								delete self._obj.curAux;
 							}
 						}
-						self._obj = null;
+						//self._obj = null;
 						
 						targetObj = _.first(_.select(self._allObjs, function(o){
 						
@@ -495,14 +591,30 @@
 						self._start = cur;
 						
 						// Create bounding box
-						
+						$(".axe_node").remove();
+						if (targetObj.con=="path"){
+							
+							_.each(targetObj.points, function(p){
+								
+								var node = new Node({
+									x: p.x,
+									y: p.y
+								}, targetObj, self._cont, {
+									offsetLeft: self._offLeft,
+									offsetTop: self._offTop
+								});
+							
+								
+						});
+						}
+					
 						var bb = targetObj.cur.getBBox();
-						zH = $(".zotero").height();
-						debug("zotH  " + zH);
+						//zH = $(".vd-container:first").offset().top;
+						
 						var bbH = parseInt(bb.height);
 						var bbW = parseInt(bb.width);
-						var bbL = bb.x;
-						var bbT = parseInt(bb.y) + parseInt(zH);
+						var bbL = parseInt(bb.x) + parseInt(self._offLeft);
+						var bbT = parseInt(bb.y) + parseInt(self._offTop);
 						
 						vd = $(".vd-container")[0];
 						
@@ -512,43 +624,47 @@
 						$("#selBB").css({
 							"height": bbH,
 							"width": bbW,
-							"border": "3px #ff6666 solid"
+							"border": "none"
 						
 						});
 						$("#selBB").offset({
 							left: bbL,
 							top: bbT
 						});
-						debug("BEFORE RESIZE: "+targetObj);
+				
 						if (self._obj){
 							self._tarObj = self._obj;
 						}
 						$("#selBB").draggable({
 							start: function(e,ui){
+								cur = self._getCanvasXY(e);
 								self._start = {
-									x: e.clientX,
-									y: e.clientY
+									x: cur.x,
+									y: cur.y
 								};
+								$(".axe_node").remove();
+								$(".axe_start_node").remove();
+								
 							},
-							stop: function(e, ui){
+							drag: function(e, ui){
 								tobj = self._tarObj;
 								
 								
 								if (tobj.con == "rect") {
 									tobj.cur.attr({
-										x: ui.offset.left,
-										y: ui.offset.top - zH
+										x: ui.offset.left - self._offLeft,
+										y: ui.offset.top - self._offTop
 									});
-									tobj.x = ui.offset.left;
-									tobj.y = ui.offset.top - zH;
-									tobj.args = [ui.offset.left, ui.offset.top - zH, $("#selBB").width(), $("#selBB").height()];
+									tobj.x = ui.offset.left = self._offLeft;
+									tobj.y = ui.offset.top - self._offTop;
+									tobj.args = [ui.offset.left - self._offLeft, ui.offset.top - self._offTop, $("#selBB").width(), $("#selBB").height()];
 								}
 								else 
 									if (tobj.con == "ellipse") {
 									
 									
-										newCX = ui.offset.left + ($("#selBB").width() / 2);
-										newCY = ui.offset.top + ($("#selBB").height() / 2) - zH;
+										newCX = ui.offset.left + ($("#selBB").width() / 2) - self._offLeft;
+										newCY = ui.offset.top + ($("#selBB").height() / 2) - self._offTop;
 										tobj.cur.attr({
 											cx: newCX,
 											cy: newCY
@@ -557,10 +673,11 @@
 										tobj.cy = newCY;
 										tobj.args = [newCX, newCY, $("#selBB").width() / 2, $("#selBB").height() / 2];
 									}
-									else 
-										if (tobj.con == "path") {
-											diffX = self._start.x-e.clientX;
-											diffY = self._start.y-e.clientY;
+								else 
+									if (tobj.con == "path") {
+										cur = self._getCanvasXY(e);
+											diffX = self._start.x-cur.x;
+											diffY = self._start.y-cur.y;
 											shifted = _.each(tobj.points, function(p){
 												p.x = parseInt(p.x)-diffX;											
 												p.y = parseInt(p.y)-diffY;
@@ -573,66 +690,56 @@
 												path: makePathStr(tobj.points)+"z"
 											});
 											tobj.args=[makePathStr(tobj.points)+"z"];
+											self._start.x=cur.x;
+											self._start.y=cur.y;
 
 										}
 							}
 						});
 						
-					
-						$("#selBB").resizable({
-							start: function(e,ui){
-								self._start = {
-									width: ui.size.width,
-									height: ui.size.height
-								};
-							},
-							stop: function(e, ui){
-								tobj = self._tarObj;
-								if (tobj.con == "rect") {
-								
-									debug(ui.size.width + "_width");
-									tobj.cur.attr({
+						if (self._tarObj.con != "path") {
+							$("#selBB").resizable({
+								start: function(e, ui){
+									self._start = {
 										width: ui.size.width,
 										height: ui.size.height
-									});
-									tobj.width = ui.size.width;
-									tobj.height = ui.size.height;
-									tobj.con = "rect";
-									tobj.args = [tobj.x, tobj.y, ui.size.width, ui.size.height];
-								}
-								else 
-									if (tobj.con == "ellipse") {
+									};
 									
+									$(".axe_node").remove();
+									$(".axe_start_node").remove();
+								},
+								resize: function(e, ui){
+									tobj = self._tarObj;
+									if (tobj.con == "rect") {
+									
+										debug(ui.size.width + "_width");
 										tobj.cur.attr({
-											ry: ui.size.height / 2,
-											rx: ui.size.width / 2
+											width: ui.size.width,
+											height: ui.size.height
 										});
-										tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2, ];
+										tobj.width = ui.size.width;
+										tobj.height = ui.size.height;
+										tobj.con = "rect";
+										tobj.args = [tobj.x, tobj.y, ui.size.width, ui.size.height];
 									}
 									else 
-										if (tobj.con == "path") {
+										if (tobj.con == "ellipse") {
 										
-										   scaleX = parseFloat(ui.size.width)/parseFloat(self._start.width);
-											scaleY = parseFloat(ui.size.height)/parseFloat(self._start.height);
-											shifted = _.each(tobj.points, function(p){
-												p.x = parseFloat(p.x)*scaleX;											
-												p.y = parseFloat(p.y)*scaleY;
-												nx = p.x;
-												ny = p.y;
-												return {x:nx,y:ny};
-											});
-
 											tobj.cur.attr({
-												path: makePathStr(tobj.points)+"z"
+												ry: ui.size.height / 2,
+												rx: ui.size.width / 2
 											});
-											tobj.args=[makePathStr(tobj.points)+"z"];
-											
+											tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2, ];
 										}
-										
-								
-							}
-						});
-						
+										else 
+											{
+											throw "should not be reached";
+											}
+									
+									
+								}
+							});
+						}
 						self._obj = targetObj;
 						//self._start = cur;
 					}
@@ -642,7 +749,7 @@
 					throw "should not be reached";
 				}
 			}).mouseup(function (e) {
-				if (1 != e.which) return;
+				if ((1 != e.which) || ($(e.target).hasClass("axe_node"))) return;
 				e.preventDefault();
 
 				if (self._drawMode == 'r' || self._drawMode == 'e') {
@@ -680,29 +787,17 @@
 					}
 					var bbox = metaObj.cur.getBBox();
 					if (bbox.width > TOO_SMALL && bbox.height > TOO_SMALL) self._allObjs.push(metaObj);
-					//self._start = self._obj = null;
+					self._start = self._obj = null;
 				} else if (self._drawMode == 'p') {
 					// do nothing
 				} else if (self._drawMode == 's') {
-					//self._start = null; // stop moving
-					var o = self._obj;
-					if (o && targetObj) {
-						_.each(["scale", "con", "args", "x", "y", "width", "height",
-							"points", "cx", "cy", "rx", "ry"],
-							function(p){
-								
-								if (p in o) {
-									debug("mouseup "+p+":"+targetObj[p]);
-									o[p] = targetObj[p];
-								}
-							});
-					}
-				} else {
+					// do nothing
+					} else {
 					throw "should not be reached";
 				}
 			}).mousemove(function (e) {
-				
-				if (!self._obj) return;
+			
+				if ((!self._obj)|| ($(e.target).hasClass("axe_node")))  return;
 				e.preventDefault();
 
 				var cur = self._getCanvasXY(e);
@@ -731,38 +826,15 @@
 						throw "should not be reached";
 					}
 				} else if (self._drawMode == 'p') {
+					
 					if (!self._points) return;
-
+				    
 					var lp = _.last(self._points);
 					lp.x = cur.x;
 					lp.y = cur.y;
 					self._obj.attr({"path": makePathStr(self._points)});
 				} else if (self._drawMode == 's') {
-					/*
-					if (!self._start || !self._obj) return;
-
-					var st = self._start;
-					var o = self._obj;
-					var rs = relScale(self, o);
-					//var shift = {x: (cur.x-st.x)/rs, y: (cur.y-st.y)/rs};
-					//o.newO = shiftShape(o, shift);
-					if (o.con == "rect") {
-					//	o.cur.attr({x: o.newO.x*rs, y: o.newO.y*rs*rs});
-				
-						
-						
-						
-					} else if (self._obj.con == "ellipse") {
-						//o.cur.attr({cx: o.newO.cx*rs, cy: o.newO.cy*rs});
-					} else if (self._obj.con == "path") {
-						o.cur.attr({path: makePathStr(_.each(o.newO.points, function(p){
-							return {x: p.x*rs, y: p.y*rs};
-						})) + " z"});
-					} else {
 					
-						throw "should not be reached";
-					}
-					*/
 					
 				} else {
 				
@@ -773,24 +845,40 @@
 			// doesn't figure out if our canvas has focus
 			// having multiple ops (in different canvases) seems pretty FUBAR, tho
 			$(document).keydown(function(e) {
+				
 				// we use this to avoid acting on the same event repeatedly
 				var PREV_VAL = 1132423;
 				if (e.result == PREV_VAL) return PREV_VAL;
-
+				
 				// if it's escape, stop what we're doing
 				if (e.keyCode === 27) {
 					if (self._obj) self._obj.remove();
+					$(".axe_node").remove();
+						$(".axe_start_node").remove();
 					self._start = self._obj = self._points = null;
 				} else if ((e.keyCode === 46 || e.keyCode === 8)
 						  && self._drawMode == 's') {
 					// delete or backspace
 					e.preventDefault();
+					
+					if (($(".node_selected").size()>0)&& ($(".axe_node").size() > 4)) {
+							
+							deadNode = $(".node_selected:first");
+							deadNode.trigger("killNode");
+						
+							return 1132423;
+					}
+					
 					if (!self._obj) return 1132423;
 					var o = self._obj;
+					
 					if (o && confirm("You are about to delete annotation. Is that okay?")) {
 						self._allObjs = _.reject(self._allObjs, function (c){return c == o;});
 						o.cur.remove();
 						self._start = self._obj = self._points = null;
+						$(".axe_node").remove();
+						$(".axe_start_node").remove();
+						$(".note-container").remove();
 					}
 				}
 				return 1132423;
