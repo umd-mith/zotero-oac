@@ -54,6 +54,7 @@ $.extend(Note.prototype, {
 
 var drawer;
 function build(mode, scale, old) {
+	alert(old);
 	drawer = new VectorDrawer(mode, scale, old, $("#to-mark"), Note);
 }
 

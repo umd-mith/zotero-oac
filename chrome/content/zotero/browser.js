@@ -326,6 +326,7 @@ var Zotero_Browser = new function() {
 												});
 
 												(objs || []).forEach(function(o){
+													
 													var ctxID = Zotero.DB.query("INSERT INTO oacContexts DEFAULT VALUES");
 													Zotero.DB.query("INSERT INTO oacAnnotations (targetItemID, sourceOacCtxID) VALUES (?, ?)", [attachmentID, ctxID]);
 													Zotero.DB.query("INSERT INTO oacSegments (oacCtxID, json) VALUES (?, ?)", [ctxID, JSON.stringify(o)]);

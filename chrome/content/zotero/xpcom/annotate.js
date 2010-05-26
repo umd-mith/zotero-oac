@@ -240,7 +240,6 @@ Zotero.Annotaters = {};
 
 	ZATM.prototype = {
 		shouldSave: function() {
-			//return JSON.parse(this._contentDoc.defaultView.wrappedJSObject.savable());
 			var ret = JSON.parse(this._contentDoc.defaultView.wrappedJSObject.savable());
 			return ret;
 		},

@@ -90,3 +90,9 @@ td {
 #player-ui-seek{
 	width: 400px;
 }
+.editButtonSpan{
+	cursor: pointer;
+}
+.deleteButtonSpan{
+	cursor: pointer;
+}

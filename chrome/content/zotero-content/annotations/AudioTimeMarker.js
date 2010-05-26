@@ -2,6 +2,7 @@ var p = document.getElementById('player');
 var tm = null, ui = null, oldAnnos = null;
 
 function build(old) {
+	
 	oldAnnos = old;
 	setupTM();
 }
