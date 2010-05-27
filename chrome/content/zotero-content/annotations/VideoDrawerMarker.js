@@ -1,21 +1,49 @@
 var p = document.getElementById('player');
 var tm = null, ui = null, oldAnnos = null;
-
+var shapeTimes = [];
 
 
 
 function savable() {
-	return JSON.stringify(tm.savable());
+	
+	//  alltimes below is an array of objects each 
+	//  containing moments and ranges.  The code
+	//  must reflect this.
+	retValue = tm.savable();
+	alltimes = retValue[0];
+	
+	times = alltimes.moments;
+	_.each(shapeTimes,function(sT){
+		matchMoment = _.detect(times,function(aMoment){
+			return (aMoment.id == sT.mId);
+			
+		});
+		matchMoment.shapes = sT.shapes;
+		
+	});
+ 
+	debug("match moments: "+JSON.stringify(retValue));
+	return JSON.stringify(retValue);
 }
 /*
 function mode(s) {
 	$("h3").draggable();
 	return p.setMode(s);
 }*/
-
+function clearShapes(){
+	drawer._allObjs=[];
+	$(drawer._paper.canvas).remove();
+	drawer._buildCanvas();
+}
 function markNow() {
-	
+
 	tm.markNow();
+	if (tm._moments.length > 0) {
+		var newMoment = tm._moments[tm._moments.length - 1];
+		var momentShapes = JSON.stringify(drawer.savable());
+		shapeTimes.push({"mId": newMoment.id, "shapes": momentShapes});
+	}
+	clearShapes();
 }
 
 function markStartEnd() {
@@ -95,9 +123,11 @@ function build(mode, scale, old) {
 */
 function build(mode, scale,old) {
 	oldAnnos = old;
-	oldAnnos.shapes=[];
+	alert(JSON.stringify(old));
+	moments = old[0].moments;
+	oldAnnos.shapes=moments[moments.length-1].shapes;
+	alert(oldAnnos.shapes);
 	drawer = new VectorDrawer(mode, scale, oldAnnos, $("#player"), Note);
-	
 	setupTM();
 }
 function setupTM() {

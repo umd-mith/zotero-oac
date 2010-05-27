@@ -300,8 +300,6 @@
 									stop: function(e,ui){
 										
 										var ssp = self._shape.points;
-										debug("Before STRING OF POINTS: "+makePathStr(ssp)+"z");
-										debug("node pos "+ui.offset.left+" "+ui.offset.top);
 										for (n=0;n<ssp.length;n++) {
 											if ((ssp[n].x == self._pos.x) && (ssp[n].y == self._pos.y)){
 												
@@ -318,7 +316,7 @@
 												
 											}
 										}
-										debug("After STRING OF POINTS: "+makePathStr(ssp)+"z");
+										
 									}
 								});
 	}
@@ -432,7 +430,7 @@
 					function (p) {if (p in o) {
 						
 						r[p] = o[p];
-						debug("saving: "+p+" "+r[p]);
+						
 					}
 					});
 				return r;
@@ -712,7 +710,7 @@
 									tobj = self._tarObj;
 									if (tobj.con == "rect") {
 									
-										debug(ui.size.width + "_width");
+										
 										tobj.cur.attr({
 											width: ui.size.width,
 											height: ui.size.height
@@ -905,4 +903,3 @@ function debug(txt){
     my_window.document.getElementsByTagName("body")[0].appendChild(dbugLine);
 }
 
-debug("starting");

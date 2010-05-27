@@ -86,7 +86,7 @@ rootNS.TimeMarker = function (opts) {
 	_.each(defaultOpts, function (v, p) {
 	
 		if (!opts.hasOwnProperty(p)) {
-			opts[p] = v;
+			opts[p] = v; 
 			
 		}
 		
