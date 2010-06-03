@@ -314,7 +314,6 @@ Zotero.Annotaters = {};
 
 	ZVDM.prototype = {
 		shouldSave: function() {
-			alert("ANNO: "+this._contentDoc.defaultView.wrappedJSObject.savable())
 			return JSON.parse(this._contentDoc.defaultView.wrappedJSObject.savable());
 		},
 		setupCallbacks: function(browserDoc) {

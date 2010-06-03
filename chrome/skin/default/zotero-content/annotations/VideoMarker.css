@@ -115,3 +115,21 @@ td {
 	padding-left:10px;
 	max-width:800px;
 }
+.axe_node{
+	position: absolute;
+	z-index: 500;
+	width: 7px;
+	height: 7px;
+	background-image: url('chrome://zotero-content/skin/annotations/images/axe_blue_small.png');
+}
+.node_selected{
+
+}
+.axe_start_node{
+	width: 7px;
+	height: 7px;
+	background-image: url('chrome://zotero-content/skin/annotations/images/axe_red_small.png');
+}
+.selectedTime {
+	background-color: cyan;
+}

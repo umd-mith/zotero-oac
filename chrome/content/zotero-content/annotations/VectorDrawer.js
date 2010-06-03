@@ -109,7 +109,17 @@
 
 		return pointDistSq(i, p) < CLOSE_ENOUGH*CLOSE_ENOUGH;
 	}
-
+	function createPointsFromPath(path){
+		var curPairs = path.substr(1, path.length-2).split("L");
+			var curPoints = [];
+			_.each(curPairs,function(thisPair){
+			
+				var pair = thisPair.split(",");
+			
+				curPoints.push({"x":parseFloat(pair[0]),"y":parseFloat(pair[1])});
+			});
+		return curPoints;	
+	}
 	function pointDistFromEllipse(po, eo) {
 		// algorithm described in
 		// "Quick computation of the distance between a point and an ellipse"
@@ -127,16 +137,16 @@
 		// r = distance from center along major axis
 		// z = distance from center along minor axis
 		var ae, ap, r, z;
-		if (eo.rx > eo.ry) {
-			ae = eo.rx;
-			ap = eo.ry;
-			r = po.x-eo.cx;
-			z = po.y-eo.cy;
+		if (eo.cur.attr("rx") > eo.cur.attr("ry")) {
+			ae = eo.cur.attr("rx");
+			ap = eo.cur.attr("ry");
+			r = po.x-eo.cur.attr("cx");
+			z = po.y-eo.cur.attr("cy");
 		} else {
-			ae = eo.ry;
-			ap = eo.rx;
-			r = po.y-eo.cy;
-			z = po.x-eo.cx;
+			ae = eo.cur.attr("ry");
+			ap = eo.cur.attr("rx");
+			r = po.y-eo.cur.attr("cy");
+			z = po.x-eo.cur.attr("cx");
 		}
 		// by symmetry, we don't care about signs
 		r = Math.abs(r);
@@ -234,21 +244,37 @@
 	}
 
 	// TODO: object-ify our shapes
-	function isNear(p, o) {
-		
+	function isNear(p, o,rs) {
+
 		if (o.con == "rect") {
-			var farX = o.x+o.width, farY = o.y+o.height;
+			/*var farX = o.x+o.width, farY = o.y+o.height;
 			var ul = {x: o.x, y: o.y}, ur = {x: farX, y:o.y},
-				ll = {x: o.x, y: farY}, lr = {x: farX, y:farY};
+				ll = {x: o.x, y: farY}, lr = {x: farX, y:farY};*/
+			
+				
+				var farX = o.cur.attr("x")+o.cur.attr("width"), farY = o.cur.attr("y")+o.cur.attr("height");
+			var ul = {x: o.cur.attr("x"), y: o.cur.attr("y")}, ur = {x: farX, y:o.cur.attr("y")},
+				ll = {x: o.cur.attr("x"), y: farY}, lr = {x: farX, y:farY};
+				
 			return _.any([[ul, ur], [ur, lr], [lr, ll], [ll, ul]], function (seg){
 				return pointNearLineSegment(seg, p);
 			});
 		} else if (o.con == "ellipse") {
 			return Math.abs(pointDistFromEllipse(p, o)) < CLOSE_ENOUGH;
 		} else if (o.con == "path") {
+			var path = o.cur.attr("path").toString();
+			
+			var curPairs = path.substr(1, path.length-2).split("L");
+			var curPoints = [];
+			_.each(curPairs,function(thisPair){
+			
+				var pair = thisPair.split(",");
+			
+				curPoints.push({"x":parseFloat(pair[0]),"y":parseFloat(pair[1])});
+			});
 			// convert list of points into pairs of points for line segments
-			var line_segs = _.map(o.points, function (po, i){
-				return [i?o.points[i-1] : _.last(o.points), po];
+			var line_segs = _.map(curPoints, function (po, i){
+				return [i?curPoints[i-1] : _.last(curPoints), po];
 			});
 			return _.any(line_segs, function (l){
 				return pointNearLineSegment(l, p);
@@ -257,13 +283,19 @@
 			throw "should not be reached";
 		}
 	}
-	var Node = function( pos, shape, loc, offsets){
+	var Node = function( pos, shape, vd, offsets){
 	
 		
 		var self =this;
-		self._loc = loc;
+		
+		
+		
+		self._loc = vd._cont;
 		self._shape = shape;
-		self._pos = pos;
+		self._pos = {
+			x: pos.x,
+			y: pos.y
+		};
 		self._yOff = offsets.offsetTop;
 		self._xOff = offsets.offsetLeft;
 		self._html = "<div class='axe_node'> </div>";
@@ -355,7 +387,8 @@
 		// only thing that methods access at the moment
 		self._drawMode = initDrawMode || 's';
 		self._scale = initScale || 1;
-		self._allObjs = ((initObjs.shapes || initObjs)||[]);
+		self._allObjs = ((initObjs || initObjs)||[]);
+		
 		self._start = self._obj = self._points = null;
 		self._auxClass = auxClass;
 		self._tarObj = null;
@@ -408,8 +441,10 @@
 			};
 			self._over.elm.css(newSize);
 			_.each(self._allObjs, function (o) {
-				o.cur.remove();
-				o.cur = null;
+				if (o.cur) {
+					o.cur.remove();
+					o.cur = null;
+				}
 			});
 			self._canvas.elm.remove();
 		
@@ -436,24 +471,44 @@
 				return r;
 			});
 		},
+		_redrawShapes: function(s){
+		
+			
+				_.each(s._allObjs, function(o){
+					if (o) {
+						if (s._paper[o.con]) {
+							o.cur = s._paper[o.con].apply(s._paper, o.args);
+							var rs = relScale(s, o);
+							o.cur.scale(rs, rs, 0, 0);
+							o.cur.attr(INIT_ATTRS);
+						}
+					}
+				});
+		},
 		_buildCanvas: function() {
 			var self = this;
+			
 			self._cont = self._cont || $("<div class=\"vd-container\"></div>").appendTo("body");
 			self._cont.css({left: self._over.offset.left, top: self._over.offset.top, position: "absolute"});
-			self._paper = R(self._cont[0],
-				self._over.elm.width(), self._over.elm.height());
-			self._canvas = {elm:$(self._paper.canvas)};
-			self._canvas.off = self._canvas.elm.offset();
-			self._over.offset = self._over.elm.offset();
-			self._installHandlers();
-			_.each(self._allObjs, function (o) {
+			
+				self._paper = R(self._cont[0], self._over.elm.width(), self._over.elm.height());
+				
+				self._canvas = {
+					elm: $(self._paper.canvas)
+				};
+				self._canvas.off = self._canvas.elm.offset();
+				self._over.offset = self._over.elm.offset();
+				self._installHandlers();
+				self._redrawShapes(self);
+			/*_.each(self._allObjs, function (o) {
                 if (self._paper[o.con]){
 				o.cur = self._paper[o.con].apply(self._paper, o.args);
 				var rs = relScale(self, o);
 				o.cur.scale(rs, rs, 0, 0);
 				o.cur.attr(INIT_ATTRS);
                 }
-			});
+                	});*/
+		
 		},
 		// given an event e, figure out where it is relative to the canvas
 		_getCanvasXY: function (e) {
@@ -537,7 +592,7 @@
 							node = new Node({
 									x: cur.x,
 									y: cur.y
-								},self._obj,self._cont,{offsetTop: self._offTop, offsetLeft: self._offLeft});
+								},self._obj,self,{offsetTop: self._offTop, offsetLeft: self._offLeft});
 							
 					} else {
 						self._points = [cur];
@@ -569,8 +624,9 @@
 						
 						targetObj = _.first(_.select(self._allObjs, function(o){
 						
-						
-							return isNear(cur, o);
+							var rs = relScale(self, o);
+							
+							return isNear(cur, o,rs);
 						}));
 						if (!targetObj) {
 							//$("#selBB").remove();
@@ -591,13 +647,13 @@
 						// Create bounding box
 						$(".axe_node").remove();
 						if (targetObj.con=="path"){
-							
+							targetObj.points = createPointsFromPath(targetObj.cur.attr("path").toString());
 							_.each(targetObj.points, function(p){
 								
 								var node = new Node({
 									x: p.x,
 									y: p.y
-								}, targetObj, self._cont, {
+								}, targetObj, self, {
 									offsetLeft: self._offLeft,
 									offsetTop: self._offTop
 								});
@@ -642,20 +698,24 @@
 								};
 								$(".axe_node").remove();
 								$(".axe_start_node").remove();
+								tobj = self._tarObj;
+								tobj.scale = parseFloat(self._scale);
 								
 							},
 							drag: function(e, ui){
 								tobj = self._tarObj;
-								
-								
+							var rs = relScale(self, tobj);
+								xDiff = parseFloat(ui.offset.left)-parseFloat(self._offLeft);
+								yDiff = parseFloat(ui.offset.top)-parseFloat(self._offTop);
 								if (tobj.con == "rect") {
 									tobj.cur.attr({
-										x: ui.offset.left - self._offLeft,
-										y: ui.offset.top - self._offTop
+										x: xDiff,
+										y: yDiff
 									});
-									tobj.x = ui.offset.left = self._offLeft;
-									tobj.y = ui.offset.top - self._offTop;
-									tobj.args = [ui.offset.left - self._offLeft, ui.offset.top - self._offTop, $("#selBB").width(), $("#selBB").height()];
+									tobj.x = xDiff;
+									tobj.y = yDiff;
+									
+									tobj.args = [xDiff, yDiff, $("#selBB").width(), $("#selBB").height()];
 								}
 								else 
 									if (tobj.con == "ellipse") {
@@ -665,20 +725,25 @@
 										newCY = ui.offset.top + ($("#selBB").height() / 2) - self._offTop;
 										tobj.cur.attr({
 											cx: newCX,
-											cy: newCY
+											cy: newCY,
+											
 										});
-										tobj.cx = newCX;
-										tobj.cy = newCY;
-										tobj.args = [newCX, newCY, $("#selBB").width() / 2, $("#selBB").height() / 2];
+										tobj.cx = (newCX);
+										tobj.cy = (newCY);
+										tobj.args = [newCX, newCY, ($("#selBB").width() / 2), ($("#selBB").height() / 2)];
 									}
 								else 
 									if (tobj.con == "path") {
 										cur = self._getCanvasXY(e);
 											diffX = self._start.x-cur.x;
 											diffY = self._start.y-cur.y;
+											tobj.points = createPointsFromPath(tobj.cur.attr("path").toString());
+											
 											shifted = _.each(tobj.points, function(p){
-												p.x = parseInt(p.x)-diffX;											
-												p.y = parseInt(p.y)-diffY;
+										       //	alert(p.x);
+												p.x = (parseFloat(p.x)-diffX);											
+												p.y = (parseFloat(p.y)-diffY);
+												//alert(p.x);
 												nx = p.x;
 												ny = p.y;
 												return {x:nx,y:ny};
@@ -698,6 +763,9 @@
 						if (self._tarObj.con != "path") {
 							$("#selBB").resizable({
 								start: function(e, ui){
+									tobj = self._tarObj;
+									tobj.scale = parseFloat(self._scale);
+									var rs = relScale(self, tobj);
 									self._start = {
 										width: ui.size.width,
 										height: ui.size.height
@@ -708,6 +776,7 @@
 								},
 								resize: function(e, ui){
 									tobj = self._tarObj;
+									var rs = relScale(self, tobj);
 									if (tobj.con == "rect") {
 									
 										
@@ -727,7 +796,9 @@
 												ry: ui.size.height / 2,
 												rx: ui.size.width / 2
 											});
-											tobj.args = [tobj.x, tobj.y, ui.size.width / 2, ui.size.height / 2, ];
+											tobj.rx = ui.size.width / 2;
+											tobj.ry = ui.size.height / 2
+											tobj.args = [tobj.cx, tobj.cy, (ui.size.width / 2), (ui.size.height / 2)];
 										}
 										else 
 											{
@@ -854,7 +925,22 @@
 					$(".axe_node").remove();
 						$(".axe_start_node").remove();
 					self._start = self._obj = self._points = null;
-				} else if ((e.keyCode === 46 || e.keyCode === 8)
+				} 
+				else if (e.keyCode==65){
+			
+					$(".axe_node").each(function(i,dn){
+				
+							$(dn).remove();}
+					);
+					self.scale(self._scale*2);
+					}
+						else if (e.keyCode==66){
+							$(".axe_node").each(function(i,dn){
+							$(dn).remove();}
+					);
+					self.scale(self._scale/2);
+					}
+					else if ((e.keyCode === 46 || e.keyCode === 8)
 						  && self._drawMode == 's') {
 					// delete or backspace
 					e.preventDefault();

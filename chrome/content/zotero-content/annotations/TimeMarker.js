@@ -223,7 +223,7 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 	displayMoments: function() {
 		var output = "";
 		for (var i=0;i<this._moments.length;i++){
-			output += "<tr class='time-marker-moment'><td>"+this._moments[i]+"</td><td><span onclick='changeNote(this,false,"+this._moments[i].id+")'>"+this._moments[i].note+"</span></td><td><span class='editButtonSpan' onclick='changeNote(this.parentNode.previousSibling.firstChild,false,"+this._moments[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><span class='deleteButtonSpan' onclick='deleteNote(this,false,"+this._moments[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
+			output += "<tr id='mom_"+this._moments[i].id+"' class='time-marker-moment'><td>"+this._moments[i]+"</td><td><span onclick='changeNote(this,false,"+this._moments[i].id+")'>"+this._moments[i].note+"</span></td><td><span class='editButtonSpan' onclick='changeNote(this.parentNode.previousSibling.firstChild,false,"+this._moments[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><span class='deleteButtonSpan' onclick='deleteNote(this,false,"+this._moments[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
 		}
 
 		this._momentList.html(output);
@@ -231,7 +231,7 @@ jQuery.extend(rootNS.TimeMarker.prototype, {
 	displayRanges: function() {
 		var output="";
 				for (var i=0;i<this._ranges.length;i++){
-			output += "<tr class='time-marker-range'><td>"+this._ranges[i]+"</td><td><span onclick='changeNote(this,true,"+this._ranges[i].id+")'>"+this._ranges[i].note+"</span></td><td><span class='editButtonSpan' onclick='changeNote(this.parentNode.previousSibling.firstChild,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><span class='deleteButtonSpan' onclick='deleteNote(this,true,"+this._ranges[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
+			output += "<tr id='rng_"+this._ranges[i].id+"' class='time-marker-range'><td>"+this._ranges[i]+"</td><td><span onclick='changeNote(this,true,"+this._ranges[i].id+")'>"+this._ranges[i].note+"</span></td><td><span class='editButtonSpan' onclick='changeNote(this.parentNode.previousSibling.firstChild,true,"+this._ranges[i].id+")' href='#'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-edit.png' alt='edit' /></a></td><td><span class='deleteButtonSpan' onclick='deleteNote(this,true,"+this._ranges[i].id+")'><img src='chrome://zotero-content/skin/annotations/images/annotate-audio-delete.png' alt='delete' /></a></td></tr>";
 		}
 		this._rangeList.html(output);
 	}
