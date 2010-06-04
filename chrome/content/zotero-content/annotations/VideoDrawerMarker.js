@@ -12,20 +12,30 @@ function savable() {
 	//  containing moments and ranges.  The code
 	//  must reflect this.
 	timesArray = tm.savable();
+	alert("hello");
 	times = timesArray[0];
 	moments = times.moments;
 	ranges = times.ranges;
-	
-	
-	_.each(moments,function(m){
-		m.con="moment";
-		allShapes.push(m);
-	});
-	_.each(ranges,function(r){
-		r.con="range";
-		allShapes.push(r);
-	});
-	
+	debug("ALL SHAPES : "+JSON.stringify(allShapes));
+	alert(moments.length);
+	if (moments.length > 0) {
+		_.each(moments, function(m){
+			m.con = "moment";
+			allShapes.push(m);
+			debug("pushed moement, allShapes: ");
+			debug(JSON.stringify(allShapes));
+			
+		});
+	}
+	if (ranges.length > 0) {
+		_.each(ranges, function(r){
+			r.con = "range";
+			allShapes.push(r);
+			debug("pushed range, allShapes: ");
+			debug(JSON.stringify(allShapes));
+			
+		});
+	}
 	/*for (var n in allShapes) {
 		
 		
@@ -71,21 +81,22 @@ function installHandlers(){
 	});
 }
 function showShapes(tId){
-	
+	debug("about to show *** "+JSON.stringify(allShapes));
 	shapes = _.select(allShapes,function(st){
 				
 				return st.timeId == tId;
 	});
+	debug("selected *** "+JSON.stringify(allShapes));
 	clearShapes();
 	
 	_.each(shapes,function(ms){
-			
-				drawer._allObjs.push(ms);
+				
+				drawer._allObjs.push(_.clone(ms));
 			
 	});
 	drawer._redrawShapes(drawer);
-
 	
+	debug("eached *** "+JSON.stringify(allShapes));
 	
 }
 function saveSelectedShapes(){
@@ -101,7 +112,7 @@ function saveSelectedShapes(){
 		var momentShapes = drawer.savable();
 		debug("from drawer:"+JSON.stringify(momentShapes) );
 		
-		for (n in momentShapes) {
+		for (var n=0;n<momentShapes.length;n++) {
 			ms = momentShapes[n];
 			
 				if (ms.con) {
@@ -109,10 +120,10 @@ function saveSelectedShapes(){
 					
 				
 				
-					ms.timeId = sId;
+					ms.timeId = ""+sId;
 					
 					allShapes.push(ms);
-				
+					debug("pushed shape, all shapes:"+JSON.stringify(allShapes));
 				
 				
 				}
@@ -121,7 +132,7 @@ function saveSelectedShapes(){
 		if ($(".selectedTime").length>0) {
 			clearShapes();
 		}
-	
+		drawer._allObjs=[];
 	
 	
 }
@@ -241,8 +252,9 @@ function build(mode, scale,old) {
 			 		else {
 						
 			 		   if (o.scale) {
-				
+				        
 					   	allShapes.push(o);
+						debug("pushed shape, allShapes: "+JSON.stringify(allShapes));
 					   }
 			 		//throw ("VideoDrawerMarker load error: Should not be reached.");
 						}

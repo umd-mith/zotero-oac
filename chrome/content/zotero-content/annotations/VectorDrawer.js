@@ -472,7 +472,7 @@
 			});
 		},
 		_redrawShapes: function(s){
-		
+				debug("REDRAW: "+JSON.stringify(s._allObjs));
 			
 				_.each(s._allObjs, function(o){
 					if (o) {
