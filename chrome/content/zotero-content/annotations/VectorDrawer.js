@@ -419,6 +419,12 @@
 			}
 			return this._drawMode;
 		},
+		clearObjs: function(){
+			self._allObjs=[];
+			if (self._paper) {
+				self._paper.clear();
+			}
+		},
 		
 		/**
 		 * Method: scale
@@ -472,7 +478,7 @@
 			});
 		},
 		_redrawShapes: function(s){
-				debug("REDRAW: "+JSON.stringify(s._allObjs));
+				
 			
 				_.each(s._allObjs, function(o){
 					if (o) {
@@ -519,6 +525,72 @@
 				y: (e.clientY-self._canvas.off.top)+parseFloat($(document).scrollTop())
 			};
 		},
+		enableKeyListener: function(self){
+			
+			$(document).keydown(function(e) {
+				
+				// we use this to avoid acting on the same event repeatedly
+				var PREV_VAL = 1132423;
+				if (e.result == PREV_VAL) return PREV_VAL;
+				
+				// if it's escape, stop what we're doing
+				if (e.keyCode === 27) {
+					if (self._obj) self._obj.remove();
+					$(".axe_node").remove();
+						$(".axe_start_node").remove();
+					self._start = self._obj = self._points = null;
+				} 
+				else if (e.keyCode==65){
+			
+					$(".axe_node").each(function(i,dn){
+				
+							$(dn).remove();}
+					);
+					
+					self.scale(self._scale*2);
+					
+					}
+					else if (e.keyCode==66){
+							$(".axe_node").each(function(i,dn){
+							$(dn).remove();}
+					);
+					self.scale(self._scale/2);
+					}
+					else if (((e.keyCode === 46 || e.keyCode === 8))
+						  && self._drawMode == 's') {
+					// delete or backspace
+					
+					e.preventDefault();
+					
+					if (($(".node_selected").size()>0)&& ($(".axe_node").size() > 4)) {
+						    
+							deadNode = $(".node_selected:first");
+							deadNode.trigger("killNode");
+						
+							return 1132423;
+					}
+			
+					if (!self._obj) return 1132423;
+				
+					var o = self._obj;
+					
+					if (o && confirm("You are about to delete annotation. Is that okay?")) {
+						self._allObjs = _.reject(self._allObjs, function (c){return c == o;});
+						o.cur.remove();
+						self._start = self._obj = self._points = null;
+						$(".axe_node").remove();
+						$(".axe_start_node").remove();
+						$(".note-container").remove();
+					}
+				}
+				return 1132423;
+			});
+			
+		},
+		disableKeyListener: function(){
+			
+			$(document).unbind("keydown");
+		},
 		_installHandlers: function() {
 			
 			var self = this;
@@ -531,7 +603,7 @@
 				
 				if ((1 != e.which) || ($(e.target).hasClass("axe_node"))) return;
 				e.preventDefault();
-				debug(self._cont);
+				
 				var cur = self._getCanvasXY(e);
 				if (self._drawMode == 'r') {
 					self._start = cur;
@@ -740,10 +812,10 @@
 											tobj.points = createPointsFromPath(tobj.cur.attr("path").toString());
 											
 											shifted = _.each(tobj.points, function(p){
-										       //	alert(p.x);
+										   
 												p.x = (parseFloat(p.x)-diffX);											
 												p.y = (parseFloat(p.y)-diffY);
-												//alert(p.x);
+											
 												nx = p.x;
 												ny = p.y;
 												return {x:nx,y:ny};
@@ -870,122 +942,72 @@
 				e.preventDefault();
 
 				var cur = self._getCanvasXY(e);
-				if (self._drawMode == 'r' || self._drawMode == 'e') {
-					if (!self._obj) return;
-
-					var tl = {x: _.min([cur.x, self._start.x]), y: _.min([cur.y, self._start.y])},
-					br = {x: _.max([cur.x, self._start.x]), y: _.max([cur.y, self._start.y])},
-					halfWidth = (br.x-tl.x)/2,
-					halfHeight = (br.y-tl.y)/2;
-
-					if (self._drawMode == 'r') {
-						self._obj.attr({
-							x: tl.x, y: tl.y,
-							width: br.x - tl.x,
-							height: br.y - tl.y
-						});
-					} else if (self._drawMode == 'e') {
-						self._obj.attr({
-							cx: tl.x + halfWidth,
-							cy: tl.y + halfHeight,
-							rx: halfWidth,
-							ry: halfHeight
-						});
-					} else {
-						throw "should not be reached";
-					}
-				} else if (self._drawMode == 'p') {
-					
-					if (!self._points) return;
-				    
-					var lp = _.last(self._points);
-					lp.x = cur.x;
-					lp.y = cur.y;
-					self._obj.attr({"path": makePathStr(self._points)});
-				} else if (self._drawMode == 's') {
-					
-					
-				} else {
-				
-			
-					throw "should not be reached";
-				}
-			});
-			// doesn't figure out if our canvas has focus
-			// having multiple ops (in different canvases) seems pretty FUBAR, tho
-			$(document).keydown(function(e) {
-				
-				// we use this to avoid acting on the same event repeatedly
-				var PREV_VAL = 1132423;
-				if (e.result == PREV_VAL) return PREV_VAL;
-				
-				// if it's escape, stop what we're doing
-				if (e.keyCode === 27) {
-					if (self._obj) self._obj.remove();
-					$(".axe_node").remove();
-						$(".axe_start_node").remove();
-					self._start = self._obj = self._points = null;
-				} 
-				else if (e.keyCode==65){
-			
-					$(".axe_node").each(function(i,dn){
-				
-							$(dn).remove();}
-					);
-					self.scale(self._scale*2);
-					}
-						else if (e.keyCode==66){
-							$(".axe_node").each(function(i,dn){
-							$(dn).remove();}
-					);
-					self.scale(self._scale/2);
-					}
-					else if ((e.keyCode === 46 || e.keyCode === 8)
-						  && self._drawMode == 's') {
-					// delete or backspace
-					e.preventDefault();
-					
-					if (($(".node_selected").size()>0)&& ($(".axe_node").size() > 4)) {
-							
-							deadNode = $(".node_selected:first");
-							deadNode.trigger("killNode");
+				if (self._obj) {
+					if (self._drawMode == 'r' || self._drawMode == 'e') {
+						if (!self._obj) 
+							return;
 						
-							return 1132423;
+						var tl = {
+							x: _.min([cur.x, self._start.x]),
+							y: _.min([cur.y, self._start.y])
+						}, br = {
+							x: _.max([cur.x, self._start.x]),
+							y: _.max([cur.y, self._start.y])
+						}, halfWidth = (br.x - tl.x) / 2, halfHeight = (br.y - tl.y) / 2;
+						
+						if (self._drawMode == 'r') {
+							self._obj.attr({
+								x: tl.x,
+								y: tl.y,
+								width: br.x - tl.x,
+								height: br.y - tl.y
+							});
+						}
+						else 
+							if (self._drawMode == 'e') {
+								self._obj.attr({
+									cx: tl.x + halfWidth,
+									cy: tl.y + halfHeight,
+									rx: halfWidth,
+									ry: halfHeight
+								});
+							}
+							else {
+								throw "should not be reached";
+							}
 					}
-					
-					if (!self._obj) return 1132423;
-					var o = self._obj;
-					
-					if (o && confirm("You are about to delete annotation. Is that okay?")) {
-						self._allObjs = _.reject(self._allObjs, function (c){return c == o;});
-						o.cur.remove();
-						self._start = self._obj = self._points = null;
-						$(".axe_node").remove();
-						$(".axe_start_node").remove();
-						$(".note-container").remove();
-					}
+					else 
+						if (self._drawMode == 'p') {
+						
+							if (!self._points) 
+								return;
+							
+							var lp = _.last(self._points);
+							lp.x = cur.x;
+							lp.y = cur.y;
+							self._obj.attr({
+								"path": makePathStr(self._points)
+							});
+						}
+						else 
+							if (self._drawMode == 's') {
+							
+							
+							}
+							else {
+							
+							
+								throw "should not be reached";
+							}
 				}
-				return 1132423;
 			});
+		
+			self.enableKeyListener(self);
 		}
 	});
 
 	rootNS.VectorDrawer = VectorDrawer;
 })(jQuery, Raphael, _);
 
-/* XXX revive overlayed objects for contrast
-var p1 = paper.path("M10 10L90 90L10 90z");
-p1.attr({"stroke": "black", "stroke-width": 1.5});
-var p2 = paper.path("M10 10L90 90L10 90z");
-p2.attr({"stroke": "white", "stroke-width": 0.5});
-*/
-//-------DEBUGGER-----------------
-my_window = window.open("", "mywindow1", "scrollbars=yes,status=1,width=350,height=150");
-my_window.document.write("<HTML><body><div>Begin</div></body></HTML>");
 
-function debug(txt){
-    var dbugLine = document.createElement("div");
-    dbugLine.appendChild(document.createTextNode(txt));
-    my_window.document.getElementsByTagName("body")[0].appendChild(dbugLine);
-}
 
