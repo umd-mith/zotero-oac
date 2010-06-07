@@ -5,7 +5,26 @@ var allShapes = [];
 oldAudio = null;
 var selTime = null;
 var links = [];
-
+var moments, ranges = null;
+$(document).bind("mediaTimeChange",function(e,time){
+	if (!moments||!ranges){
+	timesArray = tm.savable();
+	times = timesArray[0];
+	moments = times.moments;
+	ranges = times.ranges;
+	}
+	_.detect(moments,function(m){
+		if (((parseInt(m.time)-parseInt(time))<2)&&((parseInt(m.time)-parseInt(time))>=0)){
+		   
+			showShapes("mom_"+m.id,false);
+		}
+		else{
+			/*drawer.clearObjs();
+			drawer._paper.clear();
+			drawer._allObjs=[];*/
+		}
+	})
+});
 function savable() {
 	
 	//  alltimes below is an array of objects each 
@@ -66,6 +85,7 @@ function timeClick(clicked){
 		$(".selectedTime").removeClass("selectedTime");
 		$(clicked).parent().addClass("selectedTime");
 		time = $(clicked).parent().find("td:first").text();
+	
 		if (time.indexOf("to")>0){
 			time = time.substring(time.indexOf("to"))
 		}
@@ -75,7 +95,7 @@ function timeClick(clicked){
 		tm._player.play();
 		tm._player.pause();
 		tId = $(clicked).parent().attr("id");
-		showShapes(tId);	
+		showShapes(tId,true);	
 }
 function installHandlers(){
 	
@@ -88,9 +108,11 @@ function installHandlers(){
 		timeClick(this);
 	});
 }
-function showShapes(tId){
+function showShapes(tId,shouldClear){
+	
 	drawer.clearObjs();
 	drawer._paper.clear();
+	drawer._allObjs=[];
 	var shapes = [];
 	for (var i=0;i<allShapes.length;i++){
 		st = allShapes[i];
@@ -99,12 +121,15 @@ function showShapes(tId){
 			shapes.push(i);
 		}
 	}
-	for (var i = shapes.length-1; i>=0;i--) {
-
-		allShapes.splice(parseInt(shapes[i]),1);
+	if (shouldClear) {
+		for (var i = shapes.length - 1; i >= 0; i--) {
+		
+			allShapes.splice(parseInt(shapes[i]), 1);
+		}
 	}
+	
 	drawer._redrawShapes(drawer);
-
+	
 	
 }
 function saveSelectedShapes(sId){

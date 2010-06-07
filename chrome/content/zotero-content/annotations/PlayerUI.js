@@ -71,6 +71,7 @@
 			var percent = parseInt(100*(p.getPosition()/p.getDuration()));
 			if (self._isPlaying){
 				$( "#player-ui-seek" ).slider( "option", "value", percent );
+				$(document).trigger("mediaTimeChange",[p.getPosition()]);
 			}
 			$(".player-ui-length", self._container).text(self.formatTime(p.getDuration()));
 			$(".player-ui-volume", self._container).text(Math.round(p.getVolume()*100));
