@@ -1,7 +1,7 @@
 (function ($, _) {
 	var rootNS = this;
 
-	function parseTime(s) {
+	rootNS.parseTime=function(s) {
 		var m = /(?:(\d+):)?(?:(\d+):)?(\d+(?:\.\d+)?)/.exec(s);
 		var ret = 0;
 		if (m[1]) ret += m[1]*(m[2]? 60:1)*60;
@@ -49,7 +49,7 @@
 
 
  			var percent = parseInt((val*p.getDuration())/100);
-
+		
  			p.seekTo(parseTime(percent));
 
 	}

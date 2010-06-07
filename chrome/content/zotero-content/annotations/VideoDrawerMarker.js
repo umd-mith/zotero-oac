@@ -49,7 +49,7 @@ function savable() {
 }
 
 function timeClick(clicked){
-	
+		
 		if ($(".selectedTime").length==0) {
 		sId = 0;
 		}
@@ -58,12 +58,22 @@ function timeClick(clicked){
 		sId = $(".selectedTime:first").attr("id");
 		}
 		
+		//tm._player.seekTo()
 		saveSelectedShapes(sId);
 	
 		drawer.clearObjs();
 		drawer._paper.clear();
 		$(".selectedTime").removeClass("selectedTime");
 		$(clicked).parent().addClass("selectedTime");
+		time = $(clicked).parent().find("td:first").text();
+		if (time.indexOf("to")>0){
+			time = time.substring(time.indexOf("to"))
+		}
+		var realTime = parseTime(time);
+		
+		tm._player.seekTo(realTime);
+		tm._player.play();
+		tm._player.pause();
 		tId = $(clicked).parent().attr("id");
 		showShapes(tId);	
 }
