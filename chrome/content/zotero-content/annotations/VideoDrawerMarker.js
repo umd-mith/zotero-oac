@@ -6,22 +6,44 @@ oldAudio = null;
 var selTime = null;
 var links = [];
 var moments, ranges = null;
+$(document).bind("mediaPlaying",function(e){
+		if ($(".selectedTime").length==0) {
+		sId = 0;
+		}
+		else {
+		
+		sId = $(".selectedTime:first").attr("id");
+		}
+		
+		//tm._player.seekTo()
+		saveSelectedShapes(sId);
+	
+		drawer.clearObjs();
+		drawer._paper.clear();
+		$(".selectedTime").removeClass("selectedTime");
+});
+$(document).bind("mediaPaused",function(e){
+	
+});
 $(document).bind("mediaTimeChange",function(e,time){
-	if (!moments||!ranges){
+	if (!moments&&!ranges){
 	timesArray = tm.savable();
 	times = timesArray[0];
 	moments = times.moments;
 	ranges = times.ranges;
 	}
 	_.detect(moments,function(m){
-		if (((parseInt(m.time)-parseInt(time))<2)&&((parseInt(m.time)-parseInt(time))>=0)){
-		   
-			showShapes("mom_"+m.id,false);
+		if (((parseInt(time)-parseInt(m.time))<2)&&((parseInt(time)-parseInt(m.time))>=0)){
+		
+		   if (drawer._allObjs.length == 0) {
+		    
+		   	showShapes("mom_" + m.id, false);
+		   }
 		}
 		else{
-			/*drawer.clearObjs();
+			drawer.clearObjs();
 			drawer._paper.clear();
-			drawer._allObjs=[];*/
+			drawer._allObjs=[];
 		}
 	})
 });
@@ -89,8 +111,13 @@ function timeClick(clicked){
 		if (time.indexOf("to")>0){
 			time = time.substring(time.indexOf("to"))
 		}
+	
 		var realTime = parseTime(time);
+	
+		var percent =(parseFloat(realTime)/tm._player.getDuration())*100;
 		
+		//ui.seekToPos(null,"#player-ui-seek",parseFloat(realTime));
+		//ui.seekToPos(null,tm,percent);
 		tm._player.seekTo(realTime);
 		tm._player.play();
 		tm._player.pause();
@@ -127,7 +154,7 @@ function showShapes(tId,shouldClear){
 			allShapes.splice(parseInt(shapes[i]), 1);
 		}
 	}
-	
+
 	drawer._redrawShapes(drawer);
 	
 	
@@ -156,20 +183,23 @@ function saveSelectedShapes(sId){
 }
 function markNow() {
 
-	if ($(".selectedTime").length==0) {
-		sId = "mom_"+0;
-		}
-		else {
-		
-		sId = $(".selectedTime:first").attr("id");
+	if (tm._moments.length == 0) {
+		sId = "mom_" + 0;
 	}
-	saveSelectedShapes(sId);
+	else 
+		if ($(".selectedTime").length > 0) {
+		
+			sId = $(".selectedTime:first").attr("id");
+			
+			saveSelectedShapes(sId);
+		}
+	
 	tm.markNow();
 	installHandlers();
-	
-	$(".selectedTime").removeClass("selectedTime");
+	$(".selectedTime").removeClass("selectedTime");	
 	selMoment = tm._moments[tm._moments.length - 1];
-	$("#"+selMoment.id).addClass("selectedTime");
+	alert(selMoment.id);
+	$("#mom_"+selMoment.id).addClass("selectedTime");
 }
 
 function markStartEnd() {

@@ -61,8 +61,8 @@
 		$("#player-ui-new-volume").bind("volumeChange",{obj:self},self.changeVolume);
 		$("#player-ui-seek").bind("posStartChange",{obj:self},self.startPosChange);
 		$("#player-ui-seek").bind("slideChange",{obj:self},self.seekToPos);
-		$(".player-ui-play", self._container).click(function () {self._isPlaying=true;p.play();});
-		$(".player-ui-pause", self._container).click(function () {self._isPlaying=false;p.pause();});
+		$(".player-ui-play", self._container).click(function () {$(document).trigger("mediaPlaying");self._isPlaying=true;p.play();});
+		$(".player-ui-pause", self._container).click(function () {$(document).trigger("mediaPaused");self._isPlaying=false;p.pause();});
 
 
 		$("form", self._container).submit(function(e){e.preventDefault();});
