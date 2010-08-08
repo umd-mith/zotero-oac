@@ -1,7 +1,7 @@
 (function ($, _) {
 	var rootNS = this;
 
-	function parseTime(s) {
+	rootNS.parseTime=function(s) {
 		var m = /(?:(\d+):)?(?:(\d+):)?(\d+(?:\.\d+)?)/.exec(s);
 		var ret = 0;
 		if (m[1]) ret += m[1]*(m[2]? 60:1)*60;
@@ -49,7 +49,7 @@
 
 
  			var percent = parseInt((val*p.getDuration())/100);
-
+		
  			p.seekTo(parseTime(percent));
 
 	}
@@ -61,8 +61,8 @@
 		$("#player-ui-new-volume").bind("volumeChange",{obj:self},self.changeVolume);
 		$("#player-ui-seek").bind("posStartChange",{obj:self},self.startPosChange);
 		$("#player-ui-seek").bind("slideChange",{obj:self},self.seekToPos);
-		$(".player-ui-play", self._container).click(function () {self._isPlaying=true;p.play();});
-		$(".player-ui-pause", self._container).click(function () {self._isPlaying=false;p.pause();});
+		$(".player-ui-play", self._container).click(function () {$(document).trigger("mediaPlaying");self._isPlaying=true;p.play();});
+		$(".player-ui-pause", self._container).click(function () {$(document).trigger("mediaPaused");self._isPlaying=false;p.pause();});
 
 
 		$("form", self._container).submit(function(e){e.preventDefault();});
@@ -71,6 +71,7 @@
 			var percent = parseInt(100*(p.getPosition()/p.getDuration()));
 			if (self._isPlaying){
 				$( "#player-ui-seek" ).slider( "option", "value", percent );
+				$(document).trigger("mediaTimeChange",[p.getPosition()]);
 			}
 			$(".player-ui-length", self._container).text(self.formatTime(p.getDuration()));
 			$(".player-ui-volume", self._container).text(Math.round(p.getVolume()*100));
