@@ -205,29 +205,29 @@ Zotero.Annotaters = {};
 	};
 
 	ZATM.annotatesExts = {
-		"mp3": true,
-		"aac": true};
+		"mp3": true
+		};
 	ZATM.toolbarID = "zotero-annotate-tb-audio-time-marker";
 	ZATM.getHTMLString = function (title, zoteroURI, fileURI) {
 		var ios = Cc["@mozilla.org/network/io-service;1"]
 			.getService(Ci.nsIIOService);
 		var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
 			getService(Ci.nsIChromeRegistry);
-		var flashURI = cr.convertChromeURL(ios.newURI("chrome://zotero-content/content/annotations/AudioPlayer.swf", null, null));
+		var flashURI = cr.convertChromeURL(ios.newURI("chrome://zotero-content/content/annotations/projekktorPlayerMP3.swf", null, null));
 
 		return "<html><head><title>" + escapeHTML(title) + "</title>"+
 		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />"+
 "<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/AudioTimeMarker.css' />"+
 	"<link type='text/css' href='chrome://zotero-content/skin/libs/ui.all-slider.css' rel='stylesheet' /> "+
+	"<script type='text/javascript'>var PROJEKKTOR_CONFIG = {playerFlashMP3: '" + escapeHTML(flashURI.spec) + "'};</script>"+
 		"</head><body>\n" +
 			"<div class='zotero'><img src='chrome://zotero-content/skin/annotations/images/zotero_logo.png' class='logo'/></div>"+
 			"<div class='audio-container'>"+
 			"<div id='player-ui-container'></div>"+
 			"<div id='time-marker-container'></div>"+
-					"<embed src=\"" + escapeHTML(flashURI.spec) + "\"\n" +
-				"FlashVars=\"" + escapeHTML("eid=1&soundURL=" + fileURI) + "\" \n" +
-				"allowscriptaccess=\"always\"\n"  +
-				"id=\"player\" style=\"height: 0; width: 0;\"></embed>\n" +
+				"<video class='projekktor' poster='poster.png' title='this is Projekktor' width='640' height='385' controls>"+
+					"<source src='" + escapeHTML(flashURI.spec) + "' type='audio/mp3' />"+
+				"</video>"+
 				"</div>"+
 				buildScriptDeps({
 					"libs": ["jquery.js", "underscore.js", "jquery.ui.core.js",
