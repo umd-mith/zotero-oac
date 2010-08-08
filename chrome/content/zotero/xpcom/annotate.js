@@ -232,7 +232,7 @@ Zotero.Annotaters = {};
 				buildScriptDeps({
 					"libs": ["jquery.js", "underscore.js", "jquery.ui.core.js",
 						"jquery.ui.widget.js", "jquery.ui.mouse.js",
-						"jquery.ui.slider.js"],
+						"jquery.ui.slider.js", "projekktor.js"],
 					"annotations": ["PlayerUI.js","TimeMarker.js",
 						"AudioTimeMarker.js", "other.js"]
 				}) + "\n</body></html>";
@@ -307,7 +307,7 @@ Zotero.Annotaters = {};
 				"libs": ["jquery.js", "underscore.js","jquery.ui.core.js",
 						"jquery.ui.widget.js", "jquery.ui.mouse.js",
 						"jquery.ui.slider.js", "raphael.js",, "jquery.ui.draggable.js",
-						"jquery.ui.resizable.js", "jquery.ui.selectable.js", "jquery.ui.position.js"],
+						"jquery.ui.resizable.js", "jquery.ui.selectable.js", "jquery.ui.position.js", "projekktor.js"],
 				"annotations": ["PlayerUI.js","other.js", "TimeMarker.js",  "VectorDrawer.js", "VideoDrawerMarker.js"]
 			}) + "\n</script></body></html>";
 	};
