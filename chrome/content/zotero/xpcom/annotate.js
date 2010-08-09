@@ -213,32 +213,31 @@ Zotero.Annotaters = {};
 			.getService(Ci.nsIIOService);
 		var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
 			getService(Ci.nsIChromeRegistry);
-		var flashURI = cr.convertChromeURL(ios.newURI("chrome://zotero-content/content/annotations/projekktorPlayerMP3.swf", null, null));
+		var flashMP3URI = cr.convertChromeURL(ios.newURI("chrome://zotero-content/content/annotations/projekktorPlayerMP3.swf", null, null));
+		var flashMP4URI = cr.convertChromeURL(ios.newURI("chrome://zotero-content/content/annotations/projekktorPlayerMP4.swf", null, null));
 
-		return "<html><head><title>" + escapeHTML(title) + "</title>"+
-		"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />"+
-"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/AudioTimeMarker.css' />"+
-	"<link type='text/css' href='chrome://zotero-content/skin/libs/ui.all-slider.css' rel='stylesheet' /> "+
-	"<link type='text/css' href='chrome://zotero-content/skin/libs/projekktor.css' rel='stylesheet' />"+
-	buildScriptDeps({
-		"libs": ["jquery.js", "projekktor.js"]
-	})+
-	"<script type='text/javascript'>var PROJEKKTOR_CONFIG = {playerFlashMP3: '" + flashURI + "'};</script>"+
-		"</head><body>\n" +
+		return "<!DOCTYPE HTML>\n"+
+			"<html>\n<head>\n<title>" + escapeHTML(title) + "</title>\n"+
+			"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/libs/projekktor.css' />\n"+
+			"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/wrapper.css' />\n"+
+			"<link rel='stylesheet' type='text/css' href='chrome://zotero-content/skin/annotations/AudioTimeMarker.css' />\n"+
+			"<script src='chrome://zotero-content/content/libs/jquery.js'></script>\n"+
+			"<script src='chrome://zotero-content/content/libs/projekktor.js'></script>\n"+
+			"<script type='text/javascript'>var PROJEKKTOR_CONFIG = {\n"+
+			"playerFlashMP3: '" + escapeHTML(flashMP3URI.spec) + "'};</script>\n"+
+			"</head><body>\n" +
 			"<div class='zotero'><img src='chrome://zotero-content/skin/annotations/images/zotero_logo.png' class='logo'/></div>"+
+			"<video class='projekktor' title='this is Projekktor' width='640' height='385' controls>"+
+			"<source src='" + fileURI + "' type='audio/mp3' />"+
+			"</video>"+
 			"<div class='audio-container'>"+
 			"<div id='player-ui-container'></div>"+
 			"<div id='time-marker-container'></div>"+
-				"<video class='projekktor' poster='poster.png' title='this is Projekktor' width='640' height='385' controls>"+
-					"<source src='" + fileURI + "' type='audio/mp3' />"+
-				"</video>"+
+				
 				"</div>"+
 				buildScriptDeps({
-					"libs": ["underscore.js", "jquery.ui.core.js",
-						"jquery.ui.widget.js", "jquery.ui.mouse.js",
-						"jquery.ui.slider.js"],
-					"annotations": ["PlayerUI.js","TimeMarker.js",
-						"AudioTimeMarker.js", "other.js"]
+					"libs": ["underscore.js"],
+					"annotations": ["TimeMarker.js", "AudioTimeMarker.js", "other.js"]
 				}) + "\n</body></html>";
 	};
 
